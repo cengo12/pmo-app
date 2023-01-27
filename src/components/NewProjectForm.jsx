@@ -5,6 +5,7 @@ import {Calendar} from "primereact/calendar";
 
 import "./newprojectform.css"
 import {Button} from "primereact/button";
+import {ScrollPanel} from "primereact/scrollpanel";
 
 class NewProjectForm extends React.Component {
     constructor(props) {
@@ -13,7 +14,8 @@ class NewProjectForm extends React.Component {
             memberFields: [{memberId: '', memberName: '',memberTitle: '',}],
             projectName: '',
             projectManager: '',
-            dates: '',
+            startDate: '',
+            endDate: '',
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -77,25 +79,38 @@ class NewProjectForm extends React.Component {
                 </div>
 
 
-                <div className="field col-6" >
-                    <label htmlFor="projectdate">Proje Tarihleri</label>
+                <div className="field col-3" >
+                    <label htmlFor="projectdate">Başlangıç Tarihi</label>
                     <div id="projectdate" >
                         <Calendar
-                            value={this.state.dates}
-                            onChange={(e) => this.setState({ dates: e.value })}
-                            selectionMode="range"
+                            value={this.state.startDate}
+                            onChange={(e) => this.setState({ startDate: e.value })}
+                            dateFormat="dd-mm-yy"
                             readOnlyInput
                         />
                     </div>
                 </div>
 
-                <div className="field col-12">
+                <div className="field col-3" >
+                    <label htmlFor="projectdate">Bitiş Tarihi</label>
+                    <div id="projectdate" >
+                        <Calendar
+                            value={this.state.endDate}
+                            onChange={(e) => this.setState({ endDate: e.value })}
+                            dateFormat="dd-mm-yy"
+                            readOnlyInput
+                        />
+                    </div>
+                </div>
+
+                <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height: '450px' }}>
+                <div >
                     {this.state.memberFields.map((input, index) => {
                         return(
                             <div key={index}  >
                                 <div className="formgrid grid form">
-                                    <div className="field col-12 md:col-2">
-                                        <label htmlFor="memberId" className="block">Sicil Numarası</label>
+                                    <div className="field col-2">
+                                        <label htmlFor="memberId" className="block">Sicil No</label>
                                         <InputText
                                             id="memberId"
                                             className="block"
@@ -104,7 +119,7 @@ class NewProjectForm extends React.Component {
                                             onChange={event => this.handleMembersChange(index,event)}
                                         />
                                     </div>
-                                    <div className="field col-12 md:col-7">
+                                    <div className="field col-7">
                                         <label htmlFor="memberName" className="block">Takım Üyesi Adı Soyadı</label>
                                         <InputText
                                             id="memberName"
@@ -114,8 +129,8 @@ class NewProjectForm extends React.Component {
                                             onChange={event => this.handleMembersChange(index,event)}
                                         />
                                     </div>
-                                    <div className="field col-12 md:col-2">
-                                        <label htmlFor="memberTitle" className="block">Ünvan</label>
+                                    <div className="field col-2">
+                                        <label htmlFor="memberTitle" className="block">Statü</label>
                                         <InputText
                                             id="memberTitle"
                                             className="block"
@@ -124,7 +139,7 @@ class NewProjectForm extends React.Component {
                                             onChange={event => this.handleMembersChange(index,event)}
                                         />
                                     </div>
-                                    <div className="field col-12 md:col-1 plus-button">
+                                    <div className="field col-1 plus-button">
                                         <Button
                                             type="button"
                                             icon="pi pi-minus"
@@ -136,15 +151,20 @@ class NewProjectForm extends React.Component {
                             </div>
                         )
                     })}
+
+                    <div className="field col-1 col-offset-11 plus-button ">
+                        <Button
+                            type="button"
+                            icon="pi pi-plus"
+                            onClick={this.addMemberFields}
+                        />
+                    </div>
                 </div>
 
-                <div className="field col-1 col-offset-11 plus-button">
-                    <Button
-                        type="button"
-                        icon="pi pi-plus"
-                        onClick={this.addMemberFields}
-                    />
-                </div>
+
+
+                </ScrollPanel>
+
                 <div className="field col-4 col-offset-8 plus-button">
                     <Button
                         type="submit"
