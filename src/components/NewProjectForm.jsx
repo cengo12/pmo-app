@@ -29,8 +29,10 @@ class NewProjectForm extends React.Component {
     }
 
     handleSubmit(event) {
-        alert('A name was submitted: ' + this.state.value);
+        alert('A name was submitted: ' + this.state.projectName);
         event.preventDefault();
+        window.api.sendToA('putName',this.state.projectName);
+
     }
 
     handleMembersChange(index, event){
@@ -58,7 +60,7 @@ class NewProjectForm extends React.Component {
 
     render() {
         return (
-            <form onSubmit={this.handleSubmit} className="formgrid grid form">
+            <form onSubmit={this.handleSubmit} className="formgrid grid form card">
 
                 <div className="field col-12">
                     <label htmlFor="projectname" className="block">Proje Adı</label>
@@ -77,7 +79,6 @@ class NewProjectForm extends React.Component {
                         onChange={(e) => this.setState({projectManager: e.target.value})}
                     />
                 </div>
-
 
                 <div className="field col-3" >
                     <label htmlFor="projectdate">Başlangıç Tarihi</label>
@@ -160,9 +161,6 @@ class NewProjectForm extends React.Component {
                         />
                     </div>
                 </div>
-
-
-
                 </ScrollPanel>
 
                 <div className="field col-4 col-offset-8 plus-button">

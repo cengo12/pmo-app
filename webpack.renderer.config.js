@@ -10,4 +10,9 @@ module.exports = {
   module: {
     rules,
   },
+  resolve:{
+    fallback: {
+      "path": require.resolve("path-browserify")
+    }
+  },
 };
