@@ -3,12 +3,11 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 
-contextBridge.exposeInMainWorld("api", {
-    sendToA: (channel,data)=>{
+contextBridge.exposeInMainWorld("dbapi", {
+    sendToMain: (channel,data)=>{
         ipcRenderer.send(channel,data);
     },
-    receiveFromD: function(func){{
-        ipcRenderer.on("D", (event, ...args) => func(event, ...args));
-    }
-    }
+    receiveFromMain: (channel,data)=>{
+        ipcRenderer.on(channel,data);
+    },
 });
