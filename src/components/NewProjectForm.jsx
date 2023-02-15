@@ -39,6 +39,7 @@ class NewProjectForm extends React.Component {
             projectMembers: this.state.memberFields,
         }
         window.dbapi.sendToMain('newProject',newProject);
+
     }
 
     handleMembersChange(index, event){
