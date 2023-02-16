@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld("dbapi", {
     sendToMain: (channel,data)=>{
         ipcRenderer.send(channel,data);
     },
+    openFile: () => ipcRenderer.invoke('getMembers')
 });

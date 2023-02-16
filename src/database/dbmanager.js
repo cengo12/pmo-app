@@ -15,7 +15,6 @@ exports.newProject = (newProject) => {
     let projectPk = db.prepare('SELECT Id FROM Projects WHERE id = last_insert_rowid();').all(); //projectPk for bridge table
 
     // Insert to employees table
-
     for (const member of newProject.projectMembers) {
         db.prepare('INSERT OR IGNORE INTO Employees (RegistrationNumber, FullName) VALUES (?,?);')
             .run(
@@ -43,10 +42,17 @@ exports.newProject = (newProject) => {
 
 
 exports.getMembers = () => {
-    return Promise.resolve(()=>{
-        const db = betterSqlite3('./src/database/sampledata.db');
-        stmt = db.prepare('SELECT * FROM Employees');
-        console.log(stmt.all());
-        return(stmt.all());
-    });
+    const db = betterSqlite3('./src/database/sampledata.db');
+
+    return db.prepare('SELECT Employees.RegistrationNumber, Employees.FullName, ' +
+        'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
+        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status ' +
+        'FROM ProjectEmployeeBridge ' +
+        'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.Id ' +
+        'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.Id;').all()
+
+
+
+
+
 }

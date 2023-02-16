@@ -25,14 +25,19 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-
-
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  ipcMain.handle('getMembers', ()=>dbmanager.getMembers());
+  createWindow();
+})
+
+//app.on('ready', createWindow);
+
+
 
 app.whenReady().then(() => {
   installExtension(REACT_DEVELOPER_TOOLS)
@@ -61,4 +66,9 @@ app.on('activate', () => {
 // code. You can also put them in separate files and import them here.
 ipcMain.on("newProject",(event,args)=>{
   dbmanager.newProject(args);
+})
+
+app.whenReady(() => {
+  ipcMain.handle('getMembers', dbmanager.getMembers())
+  createWindow()
 })
