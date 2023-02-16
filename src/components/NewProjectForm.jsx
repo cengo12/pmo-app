@@ -34,11 +34,12 @@ class NewProjectForm extends React.Component {
         let newProject = {
             projectName: this.state.projectName,
             projectManager: this.state.projectManager,
-            projectStartDate: this.state.startDate.getDate(),
-            projectEndDate: this.state.endDate.getDate(),
+            projectStartDate: String(this.state.startDate),
+            projectEndDate: String(this.state.endDate),
             projectMembers: this.state.memberFields,
         }
         window.dbapi.sendToMain('newProject',newProject);
+        console.log(this.state.startDate)
 
     }
 
@@ -90,7 +91,12 @@ class NewProjectForm extends React.Component {
                         <div id="projectdate" >
                             <Calendar
                                 value={this.state.startDate}
-                                onChange={(e) => this.setState({ startDate: e.value })}
+                                onChange={(e) => {
+                                    this.setState({ startDate: e.value });
+                                    console.log(typeof e.value);
+                                    console.log(e.value);
+                                }
+                            }
                                 dateFormat="dd-mm-yy"
                                 readOnlyInput
                             />
@@ -115,8 +121,9 @@ class NewProjectForm extends React.Component {
                                     <div key={index}  >
                                         <div className="formgrid grid form">
                                             <div className="field col-2">
-                                                <label htmlFor="memberId" className="block">Sicil No</label>
+                                                <label htmlFor="memberId" className="block" >Sicil No</label>
                                                 <InputText
+                                                    placeholder="130xxxx"
                                                     id="memberId"
                                                     className="block"
                                                     name='memberId'
