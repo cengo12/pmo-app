@@ -35,16 +35,6 @@ app.on('ready', () => {
   createWindow();
 })
 
-//app.on('ready', createWindow);
-
-
-
-app.whenReady().then(() => {
-  installExtension(REACT_DEVELOPER_TOOLS)
-      .then((name) => console.log(`Added Extension:  ${name}`))
-      .catch((err) => console.log('An error occurred: ', err));
-});
-
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -66,9 +56,4 @@ app.on('activate', () => {
 // code. You can also put them in separate files and import them here.
 ipcMain.on("newProject",(event,args)=>{
   dbmanager.newProject(args);
-})
-
-app.whenReady(() => {
-  ipcMain.handle('getMembers', dbmanager.getMembers())
-  createWindow()
 })
