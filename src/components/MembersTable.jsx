@@ -2,13 +2,23 @@ import React, {useState, useEffect} from "react";
 import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {Tag} from "primereact/tag";
+import {Checkbox} from "primereact/checkbox";
+import {Button} from "primereact/button";
 
 export default function MembersTable(){
-    const [members, setMembers] = useState([]);
+    const [members, setMembers] = useState([{
+        Id: "",
+        FullName: "",
+        PaperType: "",
+        ProjectName: "",
+        ProjectRole: "",
+        RegistrationNumber: "",
+        Status: "",
+        selected: false,
+    }]);
 
     useEffect(()=> {
         window.dbapi.openFile().then(result => setMembers(result));
-
     },[]);
 
     const statusBodyTemplate = (member) => {
@@ -31,8 +41,26 @@ export default function MembersTable(){
         }
     };
 
-    const confirmationBodyTemplate = () =>{
+    const handleCheckboxClick = (index) => {
+        const _members = [...members];
+        _members[index].selected = !_members[index].selected;
+        _members[index].Status = _members[index].selected ? "Tamamlandı" : "Eksik";
+        setMembers(_members);
+    };
 
+    const handleConfButtonClick = (index) => {
+        const _members = [...members];
+        _members[index].Status = "Onaylandı";
+        setMembers(_members);
+    };
+
+    const confirmationBodyTemplate = (member,options) =>{
+        return(
+            <div>
+                <Checkbox checked={member.selected} onChange={() => handleCheckboxClick(options.rowIndex)} ></Checkbox>
+                <Button size="sm" onClick={()=> handleConfButtonClick(options.rowIndex)} >Onayla</Button>
+            </div>
+        )
     }
 
     return(
@@ -44,8 +72,8 @@ export default function MembersTable(){
                     <Column field="ProjectName" header="Proje"></Column>
                     <Column field="ProjectRole" header="Statü"></Column>
                     <Column field="PaperType" header="Belge Tipi"></Column>
-                    <Column field="Status" header="Durum" body={statusBodyTemplate}></Column>
-                    <Column field="confirmation" ></Column>
+                    <Column field="Status" header="Durum" body={statusBodyTemplate} ></Column>
+                    <Column field="confirmation" body={confirmationBodyTemplate} ></Column>
                 </DataTable>
             </div>
         </div>

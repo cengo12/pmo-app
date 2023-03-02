@@ -50,9 +50,4 @@ exports.getMembers = () => {
         'FROM ProjectEmployeeBridge ' +
         'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.Id ' +
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.Id;').all()
-
-
-
-
-
 }

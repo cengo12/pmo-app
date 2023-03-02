@@ -23,6 +23,7 @@ class App extends Component{
                 <Sidenav />
                 <main>
                     <Routes>
+                        <Route path="/" element={ <Projects/> } />
                         <Route path="/main_window" element={ <Projects/> } />
                         <Route path="/members" element={ <Members/> } />
                         <Route path="/addproject" element={ <Addproject/> } />
