@@ -50,7 +50,9 @@ export default function MembersTable(){
 
     const handleConfButtonClick = (index) => {
         const _members = [...members];
-        _members[index].Status = "Onaylandı";
+        if (_members[index].selected){
+            _members[index].Status = "Onaylandı";
+        }
         setMembers(_members);
     };
 
