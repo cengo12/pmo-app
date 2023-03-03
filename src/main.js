@@ -59,3 +59,7 @@ app.on('activate', () => {
 ipcMain.on("newProject",(event,args)=>{
   dbmanager.newProject(args);
 })
+
+ipcMain.on("updateStatus",(event,args)=>{
+  dbmanager.updateStatus(args);
+})

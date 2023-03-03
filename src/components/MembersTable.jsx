@@ -14,7 +14,7 @@ export default function MembersTable(){
         ProjectRole: "",
         RegistrationNumber: "",
         Status: "",
-        selected: false,
+        Checked: false,
     }]);
 
     useEffect(()=> {
@@ -28,9 +28,11 @@ export default function MembersTable(){
     const getStatus = (member) => {
         switch (member.Status) {
             case 'Onaylandı':
+                member.Checked = true;
                 return 'success';
 
             case 'Tamamlandı':
+                member.Checked = true;
                 return 'warning';
 
             case 'Eksik':
@@ -43,23 +45,37 @@ export default function MembersTable(){
 
     const handleCheckboxClick = (index) => {
         const _members = [...members];
-        _members[index].selected = !_members[index].selected;
-        _members[index].Status = _members[index].selected ? "Tamamlandı" : "Eksik";
+        _members[index].Checked = !_members[index].Checked;
+        _members[index].Status = _members[index].Checked ? "Tamamlandı" : "Eksik";
         setMembers(_members);
+
+        const updatedStatus = {
+            Id: _members[index].Id,
+            Status: _members[index].Status
+        };
+
+        window.dbapi.sendToMain('updateStatus',updatedStatus);
+
     };
 
     const handleConfButtonClick = (index) => {
         const _members = [...members];
-        if (_members[index].selected){
+        if (_members[index].Checked){
             _members[index].Status = "Onaylandı";
         }
         setMembers(_members);
+        const updatedStatus = {
+            Id: _members[index].Id,
+            Status: _members[index].Status
+        };
+
+        window.dbapi.sendToMain('updateStatus',updatedStatus);
     };
 
     const confirmationBodyTemplate = (member,options) =>{
         return(
             <div>
-                <Checkbox checked={member.selected} onChange={() => handleCheckboxClick(options.rowIndex)} ></Checkbox>
+                <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(options.rowIndex)} ></Checkbox>
                 <Button size="sm" onClick={()=> handleConfButtonClick(options.rowIndex)} >Onayla</Button>
             </div>
         )
@@ -68,7 +84,7 @@ export default function MembersTable(){
     return(
         <div>
             <div className="data">
-                <DataTable value={members} stripedRows responsiveLayout="scroll">
+                <DataTable value={members} stripedRows scrollable="true">
                     <Column field="RegistrationNumber" header="Sicil No."></Column>
                     <Column field="FullName" header="Çalışan"></Column>
                     <Column field="ProjectName" header="Proje"></Column>

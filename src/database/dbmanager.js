@@ -44,10 +44,18 @@ exports.newProject = (newProject) => {
 exports.getMembers = () => {
     const db = betterSqlite3('./src/database/sampledata.db');
 
-    return db.prepare('SELECT Employees.RegistrationNumber, Employees.FullName, ' +
+    return db.prepare('SELECT ProjectEmployeeBridge.Id, ' +
+        'Employees.RegistrationNumber, Employees.FullName, ' +
         'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
         'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status ' +
         'FROM ProjectEmployeeBridge ' +
         'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.Id ' +
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.Id;').all()
+}
+
+exports.updateStatus = (updatedStatus) => {
+    const db = betterSqlite3('./src/database/sampledata.db');
+    console.log(updatedStatus);
+    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE Id = ?').run(updatedStatus.Status,updatedStatus.Id);
+    db.close();
 }
