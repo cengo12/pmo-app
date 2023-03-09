@@ -34,8 +34,8 @@ class NewProjectForm extends React.Component {
         let newProject = {
             projectName: this.state.projectName,
             projectManager: this.state.projectManager,
-            projectStartDate: String(this.state.startDate),
-            projectEndDate: String(this.state.endDate),
+            projectStartDate: this.state.startDate,
+            projectEndDate: this.state.endDate,
             projectMembers: this.state.memberFields,
         }
         window.dbapi.sendToMain('newProject',newProject);
@@ -164,13 +164,16 @@ class NewProjectForm extends React.Component {
                                 )
                             })}
 
-                            <div className="field col-1 col-offset-11 plus-button ">
-                                <Button
-                                    type="button"
-                                    icon="pi pi-plus"
-                                    onClick={this.addMemberFields}
-                                />
+                            <div className="">
+                                <div className=" plus-button ">
+                                    <Button
+                                        type="button"
+                                        icon="pi pi-plus"
+                                        onClick={this.addMemberFields}
+                                    />
+                                </div>
                             </div>
+
                         </div>
                     </ScrollPanel>
 
