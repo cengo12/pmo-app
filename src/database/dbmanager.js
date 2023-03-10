@@ -42,7 +42,7 @@ exports.newProject = (newProject) => {
 exports.getMembers = () => {
     const db = betterSqlite3('./src/database/sampledata.db');
     const data = db.prepare(
-        'SELECT ProjectEmployeeBridge.Id, ' +
+        'SELECT Employees.Id, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
         'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
         'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status,' +
@@ -52,41 +52,54 @@ exports.getMembers = () => {
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.Id;'
     ).all();
 
-    data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
 
-    let StartProject = {}
-    let FinishProject = {}
-    StartProject = {...data[0]};
-    FinishProject = {...data[0]};
+
+    // Get a list of unique age values
+    const idValues = [...new Set(data.map(item => item.Id))];
+
+    // Create a new array for each age value
+    const memberArrays = idValues.map(id => data.filter(item => item.Id === id));
+
+
     let tableData = [];
+    for (let i = 0; i < memberArrays.length; i++) {
+        let data = memberArrays[i];
+        data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+        let StartProject = {}
+        let FinishProject = {}
+        StartProject = {...data[0]};
+        FinishProject = {...data[0]};
 
-    for (let i = 0; i < data.length-1; i++) {
-        if (new Date(StartProject.FinishDate) > new Date(data[i+1].StartDate)){
-            if (new Date(StartProject.FinishDate) > new Date(data[i+1].FinishDate)){
-                FinishProject = {...data[i]};
-            }else{
+
+        for (let i = 0; i < data.length-1; i++) {
+            if (new Date(StartProject.FinishDate) > new Date(data[i+1].StartDate)){
+                if (new Date(StartProject.FinishDate) > new Date(data[i+1].FinishDate)){
+                    FinishProject = {...data[i]};
+                }else{
+                    FinishProject = {...data[i+1]};
+                }
+            }
+            else{
+                if (new Date(FinishProject.FinishDate) < new Date(data[i+1].FinishDate) ){
+                    if (new Date(FinishProject.FinishDate) >  new Date(data[i+1].StartDate)){
+                        FinishProject = {...data[i+1]}
+                    }
+                }
+                StartProject.PaperType = 'Başlangıç Formu';
+                FinishProject.PaperType = 'Bitiş Formu';
+                tableData.push(StartProject);
+                tableData.push(FinishProject);
+                StartProject = {...data[i+1]};
                 FinishProject = {...data[i+1]};
             }
         }
-        else{
-            if (new Date(FinishProject.FinishDate) < new Date(data[i+1].FinishDate) ){
-                if (new Date(FinishProject.FinishDate) >  new Date(data[i+1].StartDate)){
-                    FinishProject = {...data[i+1]}
-                }
-            }
-            StartProject.PaperType = 'Başlangıç Formu';
-            FinishProject.PaperType = 'Bitiş Formu';
-            tableData.push(StartProject);
-            tableData.push(FinishProject);
-            StartProject = {...data[i+1]};
-            FinishProject = {...data[i+1]};
-        }
+        StartProject.PaperType = 'Başlangıç Formu';
+        FinishProject.PaperType = 'Bitiş Formu';
+        tableData.push(StartProject);
+        tableData.push(FinishProject);
     }
-    StartProject.PaperType = 'Başlangıç Formu';
-    FinishProject.PaperType = 'Bitiş Formu';
-    tableData.push(StartProject);
-    tableData.push(FinishProject);
-    console.log(tableData);
+
+
     return tableData;
 }
 
