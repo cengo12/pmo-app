@@ -42,23 +42,23 @@ exports.newProject = (newProject) => {
 exports.getMembers = () => {
     const db = betterSqlite3('./src/database/sampledata.db');
     const data = db.prepare(
-        'SELECT Employees.Id, ' +
+        'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
         'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
         'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status,' +
         'Projects.StartDate, Projects.FinishDate ' +
         'FROM ProjectEmployeeBridge ' +
-        'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.Id ' +
-        'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.Id;'
+        'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId ' +
+        'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;'
     ).all();
 
-
+    console.log(data)
 
     // Get a list of unique age values
-    const idValues = [...new Set(data.map(item => item.Id))];
+    const idValues = [...new Set(data.map(item => item.EmployeeId))];
 
     // Create a new array for each age value
-    const memberArrays = idValues.map(id => data.filter(item => item.Id === id));
+    const memberArrays = idValues.map(id => data.filter(item => item.EmployeeId === id));
 
 
     let tableData = [];
@@ -107,6 +107,6 @@ exports.getMembers = () => {
 exports.updateStatus = (updatedStatus) => {
     const db = betterSqlite3('./src/database/sampledata.db');
     console.log(updatedStatus);
-    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE Id = ?').run(updatedStatus.Status,updatedStatus.Id);
+    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.Id);
     db.close();
 }

@@ -7,7 +7,7 @@ import {Button} from "primereact/button";
 
 export default function MembersTable(){
     const [members, setMembers] = useState([{
-        Id: "",
+        BridgeId: "",
         FullName: "",
         PaperType: "",
         ProjectName: "",
@@ -50,7 +50,7 @@ export default function MembersTable(){
         setMembers(_members);
 
         const updatedStatus = {
-            Id: _members[index].Id,
+            Id: _members[index].BridgeId,
             Status: _members[index].Status
         };
 
@@ -65,7 +65,7 @@ export default function MembersTable(){
         }
         setMembers(_members);
         const updatedStatus = {
-            Id: _members[index].Id,
+            Id: _members[index].BridgeId,
             Status: _members[index].Status
         };
 
