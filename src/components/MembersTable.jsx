@@ -18,7 +18,7 @@ export default function MembersTable(){
     }]);
 
     useEffect(()=> {
-        window.dbapi.openFile().then(result => setMembers(result));
+        window.dbapi.getMembers().then(result => setMembers(result));
     },[]);
 
     const statusBodyTemplate = (member) => {
@@ -84,13 +84,13 @@ export default function MembersTable(){
     return(
         <div>
             <div className="data">
-                <DataTable value={members} stripedRows scrollable="true">
-                    <Column field="RegistrationNumber" header="Sicil No."></Column>
-                    <Column field="FullName" header="Çalışan"></Column>
-                    <Column field="ProjectName" header="Proje"></Column>
-                    <Column field="ProjectRole" header="Statü"></Column>
-                    <Column field="PaperType" header="Belge Tipi"></Column>
-                    <Column field="Status" header="Durum" body={statusBodyTemplate} ></Column>
+                <DataTable value={members} stripedRows scrollable="true" sortField="Status" sortOrder={1} removableSort>
+                    <Column field="RegistrationNumber" header="Sicil No." sortable></Column>
+                    <Column field="FullName" header="Çalışan" sortable></Column>
+                    <Column field="ProjectName" header="Proje" sortable></Column>
+                    <Column field="ProjectRole" header="Statü" sortable></Column>
+                    <Column field="PaperType" header="Belge Tipi" sortable></Column>
+                    <Column field="Status" header="Durum" body={statusBodyTemplate} sortable style={{ width: '10%' }}></Column>
                     <Column field="confirmation" body={confirmationBodyTemplate} ></Column>
                 </DataTable>
             </div>

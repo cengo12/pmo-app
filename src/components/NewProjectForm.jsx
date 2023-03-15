@@ -6,8 +6,10 @@ import {Calendar} from "primereact/calendar";
 import "./newprojectform.css"
 import {Button} from "primereact/button";
 import {ScrollPanel} from "primereact/scrollpanel";
+import {Dropdown} from "primereact/dropdown";
 
 class NewProjectForm extends React.Component {
+
     constructor(props) {
         super(props);
         this.state = {
@@ -16,12 +18,17 @@ class NewProjectForm extends React.Component {
             projectManager: '',
             startDate: '',
             endDate: '',
+            projectNames: [],
         };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.addMemberFields = this.addMemberFields.bind(this);
         this.removeMemberFields = this.removeMemberFields.bind(this);
+    }
+
+    componentDidMount() {
+
     }
 
     handleChange(event) {
@@ -72,10 +79,13 @@ class NewProjectForm extends React.Component {
                 <form onSubmit={this.handleSubmit} className="formgrid grid form card">
                     <div className="field col-12">
                         <label htmlFor="projectname" className="block">Proje Adı</label>
-                        <InputText
+                        <Dropdown
                             id="projectname"
-                            className="block"
-                            onChange={(e) => this.setState({projectName: e.target.value})}
+                            editable
+                            className="w-full"
+                            options={this.state.projectNames}
+                            value={this.state.projectName}
+                            onChange={(e) => this.setState({projectName: e.value})}
                         />
                     </div>
                     <div className="field col-6">
@@ -114,7 +124,7 @@ class NewProjectForm extends React.Component {
                         </div>
                     </div>
 
-                    <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height: '450px' }}>
+                    <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height:"450px" }}>
                         <div >
                             {this.state.memberFields.map((input, index) => {
                                 return(

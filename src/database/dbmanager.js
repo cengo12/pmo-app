@@ -54,6 +54,7 @@ exports.getMembers = () => {
 
     console.log(data)
 
+    /*
     // Get a list of unique age values
     const idValues = [...new Set(data.map(item => item.EmployeeId))];
 
@@ -100,7 +101,51 @@ exports.getMembers = () => {
     }
 
 
+    return tableData;*/
+
+
+    // Get a list of unique EmployeeId values
+    const uniqueIds = [...new Set(data.map(item => item.EmployeeId))];
+    // Initialize an empty array to hold the resulting table data
+    const tableData = [];
+
+    // Loop through each unique EmployeeId
+    uniqueIds.forEach(id => {
+        // Filter the data array to get all projects for the current EmployeeId
+        const memberData = data.filter(item => item.EmployeeId === id);
+        // Sort the projects by their start date
+        memberData.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+
+        // Initialize the start and finish projects to the first project in the array
+        let startProject = memberData[0];
+        let finishProject = memberData[0];
+
+        // Loop through the remaining projects for the current EmployeeId
+        memberData.slice(1).forEach(item => {
+            // If the finish date of the start project is later than the start date of the current project, update the finish project
+            if (new Date(startProject.FinishDate) > new Date(item.StartDate)) {
+                finishProject = item;
+            }
+            // If the finish date of the finish project is earlier than the finish date of the current project and the finish date of the finish project is later than the start date of the current project, update the finish project
+            else if (new Date(finishProject.FinishDate) < new Date(item.FinishDate) && new Date(finishProject.FinishDate) > new Date(item.StartDate)) {
+                finishProject = item;
+            }
+            // Otherwise, add the start and finish projects to the table data array, update the start and finish projects to the current project, and continue to the next project
+            else {
+                tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
+                startProject = item;
+                finishProject = item;
+            }
+        });
+
+        // Add the start and finish projects for the last project in the array to the table data array
+        tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
+    });
+
+// Return the resulting table data
     return tableData;
+
+
 }
 
 
@@ -109,4 +154,8 @@ exports.updateStatus = (updatedStatus) => {
     console.log(updatedStatus);
     db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.Id);
     db.close();
+}
+
+exports.getProjectNames= () =>{
+
 }
