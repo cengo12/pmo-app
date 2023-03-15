@@ -7,6 +7,7 @@ import "./newprojectform.css"
 import {Button} from "primereact/button";
 import {ScrollPanel} from "primereact/scrollpanel";
 import {Dropdown} from "primereact/dropdown";
+import { addLocale } from 'primereact/api';
 
 class NewProjectForm extends React.Component {
 
@@ -21,6 +22,61 @@ class NewProjectForm extends React.Component {
             projectNames: [],
         };
 
+        addLocale("tr",{
+            "startsWith":"Başlangıç",
+            "contains":"Barındırır",
+            "notContains":"İçinde Barındırmaz",
+            "endsWith":"Bitiş",
+            "equals":"Eşittir",
+            "notEquals":"Eşit Değildir",
+            "noFilter":"Filtresiz",
+            "lt":"Daha az",
+            "lte":"Daha az veya Eşit",
+            "gt":"Daha Fazla",
+            "gte":"Daha fazla veya Eşit",
+            "dateIs":"Tarih",
+            "dateIsNot":"Tarih değildir",
+            "dateBefore":"Tarihten önce",
+            "dateAfter":"Tarihten sonra",
+            "custom":"Özel",
+            "clear":"Temiz",
+            "apply":"Uygula",
+            "matchAll":"Tümüyle eşleşir",
+            "matchAny":"Herhangi birine eşleşir",
+            "addRule":"Kural Ekle",
+            "removeRule":"Kuralı Sil",
+            "accept":"Tamam",
+            "reject":"İptal",
+            "choose":"Seç",
+            "upload":"Yükle",
+            "cancel":"Vazgeç",
+            "dayNames":["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"],
+            "dayNamesShort":["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"],
+            "dayNamesMin":["Pz","Pt","Sa","Ça","Pe","Cu","Ct"],
+            "monthNames":["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"],
+            "monthNamesShort":["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"],
+            "today":"Bugün",
+            "weekHeader":"Hf",
+            "firstDayOfWeek":0,
+            "dateFormat":"dd/mm/yy",
+            "weak":"Zayıf",
+            "medium":"Orta",
+            "strong":"Güçlü",
+            "passwordPrompt":"Şifre Giriniz",
+            "emptyFilterMessage":"Kullanılabilir seçenek yok",
+            "emptyMessage":"Sonuç bulunamadı",
+            "aria": {
+                "trueLabel": "Doğru",
+                "falseLabel": "Yanlış",
+                "nullLabel": "Seçilmedi",
+                "pageLabel": "Sayfa",
+                "firstPageLabel": "İlk Sayfa",
+                "lastPageLabel": "Son Sayfa",
+                "nextPageLabel": "Sonraki Sayfa",
+                "previousPageLabel": "Önceki Sayfa"
+            }
+        });
+
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.addMemberFields = this.addMemberFields.bind(this);
@@ -30,6 +86,8 @@ class NewProjectForm extends React.Component {
     componentDidMount() {
 
     }
+
+
 
     handleChange(event) {
         this.setState({value: event.target.value});
@@ -108,6 +166,7 @@ class NewProjectForm extends React.Component {
                                 }
                             }
                                 dateFormat="dd-mm-yy"
+                                locale={"tr"}
                                 readOnlyInput
                             />
                         </div>
@@ -119,6 +178,7 @@ class NewProjectForm extends React.Component {
                                 value={this.state.endDate}
                                 onChange={(e) => this.setState({ endDate: e.value })}
                                 dateFormat="dd-mm-yy"
+                                locale={"tr"}
                                 readOnlyInput
                             />
                         </div>
