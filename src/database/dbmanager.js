@@ -12,7 +12,7 @@ exports.newProject = (newProject) => {
             newProject.projectEndDate.toISOString()
         );
     //console.log(newProject.projectEndDate.toISOString());
-    let projectPk = db.prepare('SELECT Id FROM Projects WHERE id = last_insert_rowid();').all(); //projectPk for bridge table
+    let projectPk = db.prepare('SELECT ProjectId FROM Projects WHERE ProjectId = last_insert_rowid();').all(); //projectPk for bridge table
 
     // Insert to employees table
     for (const member of newProject.projectMembers) {
@@ -22,13 +22,13 @@ exports.newProject = (newProject) => {
                 member.memberName,
             )
 
-        let memberPk = db.prepare('SELECT Id FROM Employees WHERE RegistrationNumber = (?);').all(member.memberId);
+        let memberPk = db.prepare('SELECT EmployeeId FROM Employees WHERE RegistrationNumber = (?);').all(member.memberId);
 
         // Insert to ProjectEmployeeBridge
         db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);')
             .run(
-                projectPk[0].Id,
-                memberPk[0].Id,
+                projectPk[0].ProjectId,
+                memberPk[0].EmployeeId,
                 member.memberTitle,
                 'Başlangıç Formu',
                 'Eksik',
