@@ -31,6 +31,9 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   ipcMain.handle('getMembers', ()=>dbmanager.getMembers());
+  ipcMain.handle('getProjectNames', ()=>dbmanager.getProjectNames());
+
+  ipcMain.handle('getProjectEdit', async (event,arg)=>dbmanager.getProjectEdit(arg));
   createWindow();
 })
 
@@ -62,4 +65,12 @@ ipcMain.on("newProject",(event,args)=>{
 
 ipcMain.on("updateStatus",(event,args)=>{
   dbmanager.updateStatus(args);
+})
+
+ipcMain.on("updateProject",(event,args)=>{
+  dbmanager.updateProject(args);
+})
+
+ipcMain.on("deleteProject",(event,args)=>{
+  dbmanager.deleteProject(args);
 })

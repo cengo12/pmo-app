@@ -55,7 +55,7 @@ export default function MembersTable(){
         };
 
         window.dbapi.sendToMain('updateStatus',updatedStatus);
-
+        window.dbapi.getProjectEdit(this.state.projectId).then(result=> console.log(result))
     };
 
     const handleConfButtonClick = (index) => {

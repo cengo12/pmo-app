@@ -19,7 +19,9 @@ class NewProjectForm extends React.Component {
             projectManager: '',
             startDate: '',
             endDate: '',
-            projectNames: [],
+            projects: [],
+            editMode: false,
+            projectId: "",
         };
 
         addLocale("tr",{
@@ -84,10 +86,8 @@ class NewProjectForm extends React.Component {
     }
 
     componentDidMount() {
-
+        window.dbapi.getProjectNames().then(result =>this.setState({projects:result}));
     }
-
-
 
     handleChange(event) {
         this.setState({value: event.target.value});
@@ -96,15 +96,26 @@ class NewProjectForm extends React.Component {
     handleSubmit(event) {
         event.preventDefault();
 
-        let newProject = {
-            projectName: this.state.projectName,
-            projectManager: this.state.projectManager,
-            projectStartDate: this.state.startDate,
-            projectEndDate: this.state.endDate,
-            projectMembers: this.state.memberFields,
+        if (this.state.editMode){
+            let newProject = {
+                projectName: this.state.projectName,
+                projectManager: this.state.projectManager,
+                projectStartDate: this.state.startDate,
+                projectEndDate: this.state.endDate,
+                projectMembers: this.state.memberFields,
+                projectId: this.state.projectId,
+            }
+            window.dbapi.sendToMain('updateProject',newProject);
+        } else {
+            let newProject = {
+                projectName: this.state.projectName,
+                projectManager: this.state.projectManager,
+                projectStartDate: this.state.startDate,
+                projectEndDate: this.state.endDate,
+                projectMembers: this.state.memberFields,
+            }
+            window.dbapi.sendToMain('newProject',newProject);
         }
-        window.dbapi.sendToMain('newProject',newProject);
-        console.log(this.state.startDate)
 
     }
 
@@ -131,26 +142,59 @@ class NewProjectForm extends React.Component {
         this.setState({memberFields:data});
     }
 
+    setProjectId(event){
+        this.setState({projectName: event.target.value}, () => {
+            const lastFoundId = this.state.projectId;
+            const projects = this.state.projects;
+            const projectName = event.target.value;
+            const selectedProject = projects.find(project => project.ProjectName === projectName);
+            const newProjectId = selectedProject ? selectedProject.ProjectId : lastFoundId;
+            this.setState({projectId: newProjectId}, () => {
+                window.dbapi.getProjectEdit({id:this.state.projectId}).then(result=>this.setState(result))
+            });
+        });
+    }
+
+    deleteProject(){
+        window.dbapi.sendToMain('deleteProject', this.state.projectId);
+    }
+
     render() {
         return (
             <div>
                 <form onSubmit={this.handleSubmit} className="formgrid grid form card">
                     <div className="field col-12">
-                        <label htmlFor="projectname" className="block">Proje Adı</label>
-                        <Dropdown
-                            id="projectname"
-                            editable
-                            className="w-full"
-                            options={this.state.projectNames}
-                            value={this.state.projectName}
-                            onChange={(e) => this.setState({projectName: e.value})}
-                        />
+                        {this.state.editMode ? (
+                            <div>
+                                <label htmlFor="projectname" className="block">Proje Adı</label>
+                                <Dropdown
+                                    id="projectname"
+                                    editable
+                                    className="w-full"
+                                    options={this.state.projects.map(project => project.ProjectName)}
+                                    value={this.state.projectName}
+                                    onChange={(e) => this.setProjectId(e) }
+                                />
+                            </div>
+                            ) : (
+                            <div>
+                                <label htmlFor="projectname" className="block">Proje Adı</label>
+                                <InputText
+                                    id="projectname"
+                                    className="w-full"
+                                    options={this.state.projectNames}
+                                    value={this.state.projectName}
+                                    onChange={(e) => this.setState({projectName: e.value})}
+                                />
+                            </div>
+                        )}
                     </div>
                     <div className="field col-6">
                         <label htmlFor="projectmanager" className="block">Proje Yöneticisi</label>
                         <InputText
                             id="projectmanager"
                             className="block"
+                            value ={this.state.projectManager}
                             onChange={(e) => this.setState({projectManager: e.target.value})}
                         />
                     </div>
@@ -183,7 +227,6 @@ class NewProjectForm extends React.Component {
                             />
                         </div>
                     </div>
-
                     <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height:"450px" }}>
                         <div >
                             {this.state.memberFields.map((input, index) => {
@@ -228,12 +271,10 @@ class NewProjectForm extends React.Component {
                                                     onClick={() => this.removeMemberFields(index)}
                                                 />
                                             </div>
-
                                         </div>
                                     </div>
                                 )
                             })}
-
                             <div className="">
                                 <div className=" plus-button ">
                                     <Button
@@ -243,20 +284,45 @@ class NewProjectForm extends React.Component {
                                     />
                                 </div>
                             </div>
-
                         </div>
                     </ScrollPanel>
-
                     <div className="field col-4 col-offset-8 plus-button">
+                        <Button
+                            type="button"
+                            label={this.state.editMode ? "Yeni Kayıt Moduna Geç" : "Düzenleme Moduna Geç"}
+                            icon="pi pi-pencil"
+                            onClick={()=>{
+                                //this.setState({editMode: !this.state.editMode});
+                                this.setState({
+                                    memberFields: [{memberId: '', memberName: '',memberTitle: '',}],
+                                    projectName: '',
+                                    projectManager: '',
+                                    startDate: '',
+                                    endDate: '',
+                                    editMode: !this.state.editMode,
+                                })
+                            }}
+                        />
+
+                        {this.state.editMode?(
+                            <div>
+                                <Button
+                                    type="button"
+                                    label="Projeyi Sil"
+                                    icon="pi pi-times"
+                                    onClick={()=>this.deleteProject()}
+                                />
+                            </div>
+                        ):(
+                            <div></div>
+                        )}
                         <Button
                             type="submit"
                             label="Projeyi Kaydet"
-                            icon="pi pi-plus"
+                            icon="pi pi-save"
                         />
                     </div>
-
                 </form>
-
             </div>
         );
     }
