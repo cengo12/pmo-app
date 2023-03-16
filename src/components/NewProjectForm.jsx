@@ -116,7 +116,6 @@ class NewProjectForm extends React.Component {
             }
             window.dbapi.sendToMain('newProject',newProject);
         }
-
     }
 
     handleMembersChange(index, event){
@@ -157,6 +156,7 @@ class NewProjectForm extends React.Component {
 
     deleteProject(){
         window.dbapi.sendToMain('deleteProject', this.state.projectId);
+        window.location.reload(true);
     }
 
     render() {
@@ -313,12 +313,12 @@ class NewProjectForm extends React.Component {
                                     onClick={()=>this.deleteProject()}
                                 />
                             </div>
-                        ):(
+                        ) : (
                             <div></div>
                         )}
                         <Button
                             type="submit"
-                            label="Projeyi Kaydet"
+                            label={this.state.editMode ? "Projeyi Güncelle" : "Projeyi Kaydet"}
                             icon="pi pi-save"
                         />
                     </div>
