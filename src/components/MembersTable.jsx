@@ -8,17 +8,21 @@ import {Button} from "primereact/button";
 export default function MembersTable(){
     const [members, setMembers] = useState([{
         BridgeId: "",
+        EmployeeId: "",
+        FinishDate: "",
         FullName: "",
         PaperType: "",
         ProjectName: "",
         ProjectRole: "",
         RegistrationNumber: "",
+        StartDate: "",
         Status: "",
         Checked: false,
     }]);
 
     useEffect(()=> {
         window.dbapi.getMembers().then(result => setMembers(result));
+
     },[]);
 
     const statusBodyTemplate = (member) => {
@@ -43,40 +47,49 @@ export default function MembersTable(){
         }
     };
 
-    const handleCheckboxClick = (index) => {
+    const handleCheckboxClick = (member) => {
         const _members = [...members];
-        _members[index].Checked = !_members[index].Checked;
-        _members[index].Status = _members[index].Checked ? "Tamamlandı" : "Eksik";
-        setMembers(_members);
+        const foundMember = _members.find(_member => _member.BridgeId === member.BridgeId && _member.PaperType === member.PaperType);
+        let updatedStatus = {};
 
-        const updatedStatus = {
-            Id: _members[index].BridgeId,
-            Status: _members[index].Status
-        };
+        if (foundMember) {
+            foundMember.Checked = !foundMember.Checked;
+            foundMember.Status = foundMember.Checked ? "Tamamlandı" : "Eksik";
 
-        window.dbapi.sendToMain('updateStatus',updatedStatus);
-        window.dbapi.getProjectEdit(this.state.projectId).then(result=> console.log(result))
-    };
-
-    const handleConfButtonClick = (index) => {
-        const _members = [...members];
-        if (_members[index].Checked){
-            _members[index].Status = "Onaylandı";
+            updatedStatus = {
+                BridgeId: foundMember.BridgeId,
+                Status: foundMember.Status,
+            };
         }
+
         setMembers(_members);
+
+        window.dbapi.sendToMain('updateStatus',updatedStatus);
+    };
+
+    const handleConfButtonClick = (member) => {
+        const _members = [...members];
+        const foundMember = _members.find(_member => _member.BridgeId === member.BridgeId && _member.PaperType === member.PaperType);
+
+        if (foundMember && foundMember.Checked) {
+            foundMember.Status = "Onaylandı";
+        }
+        console.log(_members);
+        setMembers(_members);
+
         const updatedStatus = {
-            Id: _members[index].BridgeId,
-            Status: _members[index].Status
+            BridgeId: foundMember.BridgeId,
+            Status: foundMember.Status,
         };
 
         window.dbapi.sendToMain('updateStatus',updatedStatus);
     };
 
-    const confirmationBodyTemplate = (member,options) =>{
+    const confirmationBodyTemplate = (member) =>{
         return(
             <div>
-                <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(options.rowIndex)} ></Checkbox>
-                <Button size="sm" onClick={()=> handleConfButtonClick(options.rowIndex)} >Onayla</Button>
+                <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(member)} ></Checkbox>
+                <Button size="sm" onClick={()=> handleConfButtonClick(member)} >Onayla</Button>
             </div>
         )
     }

@@ -15,11 +15,11 @@ class NewProjectForm extends React.Component {
         super(props);
         this.state = {
             memberFields: [{memberId: '', memberName: '',memberTitle: '',}],
-            projectName: '',
+            projectName: "",
             projectManager: '',
             startDate: '',
             endDate: '',
-            projects: [],
+            projects: [{}],
             editMode: false,
             projectId: "",
         };
@@ -160,6 +160,8 @@ class NewProjectForm extends React.Component {
     }
 
     render() {
+        const projectName = this.state.projectName;
+        const projects = this.state.projects;
         return (
             <div>
                 <form onSubmit={this.handleSubmit} className="formgrid grid form card">
@@ -171,8 +173,8 @@ class NewProjectForm extends React.Component {
                                     id="projectname"
                                     editable
                                     className="w-full"
-                                    options={this.state.projects.map(project => project.ProjectName)}
-                                    value={this.state.projectName}
+                                    options={projects.map(project => project.ProjectName)}
+                                    value={projectName}
                                     onChange={(e) => this.setProjectId(e) }
                                 />
                             </div>
@@ -182,9 +184,8 @@ class NewProjectForm extends React.Component {
                                 <InputText
                                     id="projectname"
                                     className="w-full"
-                                    options={this.state.projectNames}
-                                    value={this.state.projectName}
-                                    onChange={(e) => this.setState({projectName: e.value})}
+                                    value={projectName}
+                                    onChange={(e) => this.setState({projectName: e.target.value})}
                                 />
                             </div>
                         )}
