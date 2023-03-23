@@ -27,7 +27,6 @@ export default function MembersTable(){
 
     useEffect(()=> {
         window.dbapi.getMembers().then(result => setMembers(result));
-
     },[]);
 
 

@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld("dbapi", {
     getMembers: () => ipcRenderer.invoke('getMembers'),
     getProjectNames: () => ipcRenderer.invoke('getProjectNames'),
     getProjectEdit: (id) => ipcRenderer.invoke('getProjectEdit',id),
+    getDatabaseFile: () => ipcRenderer.invoke('getDatabaseFile'),
 });
