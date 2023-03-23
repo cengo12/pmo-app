@@ -7,6 +7,7 @@ import {Button} from "primereact/button";
 
 import styles from "./memberstable.module.css"
 
+
 export default function MembersTable(){
     const [members, setMembers] = useState([{
         BridgeId: "",
@@ -30,12 +31,13 @@ export default function MembersTable(){
     },[]);
 
 
+
     const rowExpansionTemplate = (data) => {
         data.StartDate = new Date(data.StartDate).toLocaleDateString()
         data.FinishDate = new Date(data.FinishDate).toLocaleDateString()
         return (
             <div>
-                <h5>{data.ProjectName} Detayları</h5>
+                <h4>{data.ProjectName} Detayları</h4>
                 <DataTable value={[data]}>
                     <Column field="ProjectManager" header="Proje Yöneticisi"></Column>
                     <Column field="StartDate" header="Proje Başlangıç Tarihi"></Column>
