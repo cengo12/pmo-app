@@ -136,14 +136,13 @@ exports.getMembers = () => {
     const data = db.prepare(
         'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
-        'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
-        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status,' +
+        'Projects.ProjectManager, Projects.ProjectName, ProjectEmployeeBridge.ProjectRole, ' +
+        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status, ' +
         'Projects.StartDate, Projects.FinishDate ' +
         'FROM ProjectEmployeeBridge ' +
         'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId ' +
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;'
     ).all();
-    console.log(data)
     /*
     // Get a list of unique age values
     const idValues = [...new Set(data.map(item => item.EmployeeId))];

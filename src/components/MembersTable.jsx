@@ -5,6 +5,8 @@ import {Tag} from "primereact/tag";
 import {Checkbox} from "primereact/checkbox";
 import {Button} from "primereact/button";
 
+import styles from "./memberstable.module.css"
+
 export default function MembersTable(){
     const [members, setMembers] = useState([{
         BridgeId: "",
@@ -12,6 +14,7 @@ export default function MembersTable(){
         FinishDate: "",
         FullName: "",
         PaperType: "",
+        ProjectManager: "",
         ProjectName: "",
         ProjectRole: "",
         RegistrationNumber: "",
@@ -19,11 +22,28 @@ export default function MembersTable(){
         Status: "",
         Checked: false,
     }]);
+    const [expandedRows, setExpandedRows] = useState(null);
 
     useEffect(()=> {
         window.dbapi.getMembers().then(result => setMembers(result));
 
     },[]);
+
+
+    const rowExpansionTemplate = (data) => {
+        data.StartDate = new Date(data.StartDate).toLocaleDateString()
+        data.FinishDate = new Date(data.FinishDate).toLocaleDateString()
+        return (
+            <div>
+                <h5>{data.ProjectName} Detayları</h5>
+                <DataTable value={[data]}>
+                    <Column field="ProjectManager" header="Proje Yöneticisi"></Column>
+                    <Column field="StartDate" header="Proje Başlangıç Tarihi"></Column>
+                    <Column field="FinishDate" header="Proje Bitiş Tarihi"></Column>
+                </DataTable>
+            </div>
+        );
+    }
 
     const statusBodyTemplate = (member) => {
         return <Tag value={member.Status} severity={getStatus(member)}></Tag>;
@@ -87,8 +107,8 @@ export default function MembersTable(){
 
     const confirmationBodyTemplate = (member) =>{
         return(
-            <div>
-                <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(member)} ></Checkbox>
+            <div className={styles.animatedRow}>
+                <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(member)}></Checkbox>
                 <Button size="sm" onClick={()=> handleConfButtonClick(member)} >Onayla</Button>
             </div>
         )
@@ -97,7 +117,11 @@ export default function MembersTable(){
     return(
         <div>
             <div className="data">
-                <DataTable value={members} stripedRows scrollable="true" sortField="Status" sortOrder={1} removableSort>
+                <DataTable expandedRows={expandedRows}
+                           onRowToggle={(e) => setExpandedRows(e.data)}
+                           rowExpansionTemplate={rowExpansionTemplate}
+                           value={members} stripedRows scrollable="true" sortField="Status" sortOrder={1} removableSort rowHover={true}>
+                    <Column expander={true} style={{ width: '5rem' }} />
                     <Column field="RegistrationNumber" header="Sicil No." sortable></Column>
                     <Column field="FullName" header="Çalışan" sortable></Column>
                     <Column field="ProjectName" header="Proje" sortable></Column>
