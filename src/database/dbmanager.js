@@ -31,7 +31,16 @@ exports.newProject = (newProject) => {
                 member.memberTitle,
                 'Başlangıç Formu',
                 'Eksik',
-            )
+            );
+
+        db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);')
+            .run(
+                projectPk[0].ProjectId,
+                memberPk[0].EmployeeId,
+                member.memberTitle,
+                'Bitiş Formu',
+                'Eksik',
+            );
     }
 
     db.close();
@@ -63,11 +72,9 @@ exports.updateProject = (newProject) => {
     // Insert new ProjectEmployeeBridge records for the existing project
     for (const member of newProject.projectMembers) {
         // Insert or update Employees table
-        db.prepare(`
-      INSERT INTO Employees (RegistrationNumber, FullName)
-      VALUES (?, ?)
-      ON CONFLICT (RegistrationNumber) DO UPDATE SET FullName = excluded.FullName;
-    `).run(
+        db.prepare(
+            `INSERT INTO Employees (RegistrationNumber, FullName) VALUES (?, ?) ON CONFLICT (RegistrationNumber) DO UPDATE SET FullName = excluded.FullName;`)
+            .run(
             member.memberId,
             member.memberName
         );
@@ -78,14 +85,21 @@ exports.updateProject = (newProject) => {
     `).get(member.memberId).EmployeeId;
 
         // Insert new ProjectEmployeeBridge record
-        db.prepare(`
-      INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status)
-      VALUES (?, ?, ?, 'Başlangıç Formu', 'Eksik');
-    `).run(
+        db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);').run(
             existingProjectId,
             employeeId,
-            member.memberTitle
+            member.memberTitle,
+            'Başlangıç Formu',
+            'Eksik',
         );
+        db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);').run(
+            existingProjectId,
+            employeeId,
+            member.memberTitle,
+            'Bitiş Formu',
+            'Eksik',
+        );
+
     }
 
     db.close();
@@ -93,7 +107,6 @@ exports.updateProject = (newProject) => {
 
 exports.deleteProject = (existingProjectId) => {
     const db = betterSqlite3('./src/database/sampledata.db');
-    console.log(existingProjectId);
     // Delete ProjectEmployeeBridge records for the existing project
     db.prepare(`
     DELETE FROM ProjectEmployeeBridge 
@@ -123,14 +136,13 @@ exports.getMembers = () => {
     const data = db.prepare(
         'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
-        'Projects.ProjectName,ProjectEmployeeBridge.ProjectRole,' +
-        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status,' +
+        'Projects.ProjectManager, Projects.ProjectName, ProjectEmployeeBridge.ProjectRole, ' +
+        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status, ' +
         'Projects.StartDate, Projects.FinishDate ' +
         'FROM ProjectEmployeeBridge ' +
         'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId ' +
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;'
     ).all();
-
     /*
     // Get a list of unique age values
     const idValues = [...new Set(data.map(item => item.EmployeeId))];
@@ -228,7 +240,7 @@ exports.getMembers = () => {
 
 exports.updateStatus = (updatedStatus) => {
     const db = betterSqlite3('./src/database/sampledata.db');
-    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.Id);
+    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.BridgeId);
     db.close();
 }
 
@@ -240,13 +252,17 @@ exports.getProjectNames= (projectId) =>{
 exports.getProjectEdit = (arg) => {
     const projectId = arg.id;
     const db = betterSqlite3('./src/database/sampledata.db');
+
     const query = `
     SELECT Projects.ProjectName, Projects.ProjectManager, Projects.StartDate, Projects.FinishDate, 
-           GROUP_CONCAT(Employees.FullName, ',') AS memberName, 
-           GROUP_CONCAT(Employees.EmployeeId, ',') AS memberId, 
-           GROUP_CONCAT(ProjectEmployeeBridge.ProjectRole, ',') AS memberTitle
+       GROUP_CONCAT(Employees.FullName, ',') AS memberName, 
+       GROUP_CONCAT(Employees.RegistrationNumber, ',') AS memberId, 
+       GROUP_CONCAT(ProjectEmployeeBridge.ProjectRole, ',') AS memberTitle
     FROM Projects
-    INNER JOIN ProjectEmployeeBridge ON Projects.ProjectId = ProjectEmployeeBridge.ProjectFk
+    INNER JOIN (
+        SELECT DISTINCT ProjectFk, EmployeeFk, ProjectRole
+        FROM ProjectEmployeeBridge
+    ) AS ProjectEmployeeBridge ON Projects.ProjectId = ProjectEmployeeBridge.ProjectFk
     INNER JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId
     WHERE Projects.ProjectId = ?
     GROUP BY Projects.ProjectId;
