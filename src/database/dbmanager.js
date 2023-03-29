@@ -1,7 +1,43 @@
 const betterSqlite3 = require('better-sqlite3');
+const { dialog } = require('electron');
+const {join} = require("path");
+const {existsSync, readFileSync, writeFileSync} = require("fs");
 
-exports.newProject = (newProject) => {
-    const db = betterSqlite3('./src/database/sampledata.db');
+let db = null;
+const getDb = async ()  =>  {
+    try {
+        const configFileExists = existsSync('config.json');
+        if (configFileExists) {
+            const config = JSON.parse(readFileSync('config.json').toString());
+            return config.databaseFilePath;
+        } else {
+            return await exports.openDbDialog();
+        }
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+}
+
+exports.openDbDialog = async () => {
+    try {
+        const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+        const filePath = result.filePaths[0];
+        writeFileSync('config.json', JSON.stringify({ databaseFilePath: filePath }));
+        return filePath;
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+};
+
+
+
+exports.newProject = async (newProject) => {
+
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     // Insert to projects table
     db.prepare(`INSERT INTO Projects (ProjectName, ProjectManager, StartDate, FinishDate) VALUES (?,?,?,?);`)
@@ -46,9 +82,12 @@ exports.newProject = (newProject) => {
     db.close();
 }
 
-exports.updateProject = (newProject) => {
+exports.updateProject = async (newProject) => {
     const existingProjectId = newProject.projectId;
-    const db = betterSqlite3('./src/database/sampledata.db');
+
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     // Update Projects table
     db.prepare(`
@@ -105,8 +144,10 @@ exports.updateProject = (newProject) => {
     db.close();
 };
 
-exports.deleteProject = (existingProjectId) => {
-    const db = betterSqlite3('./src/database/sampledata.db');
+exports.deleteProject = async (existingProjectId) => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     // Delete ProjectEmployeeBridge records for the existing project
     db.prepare(`
     DELETE FROM ProjectEmployeeBridge 
@@ -131,8 +172,10 @@ exports.deleteProject = (existingProjectId) => {
 };
 
 
-exports.getMembers = () => {
-    const db = betterSqlite3('./src/database/sampledata.db');
+exports.getMembers = async () => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     const data = db.prepare(
         'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
@@ -238,20 +281,26 @@ exports.getMembers = () => {
 }
 
 
-exports.updateStatus = (updatedStatus) => {
-    const db = betterSqlite3('./src/database/sampledata.db');
+exports.updateStatus = async (updatedStatus) => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.BridgeId);
     db.close();
 }
 
-exports.getProjectNames= (projectId) =>{
-    const db = betterSqlite3('./src/database/sampledata.db');
+exports.getProjectNames= async (projectId) =>{
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     return db.prepare('SELECT ProjectName, ProjectId FROM Projects').all();
 }
 
-exports.getProjectEdit = (arg) => {
+exports.getProjectEdit = async (arg) => {
     const projectId = arg.id;
-    const db = betterSqlite3('./src/database/sampledata.db');
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     const query = `
     SELECT Projects.ProjectName, Projects.ProjectManager, Projects.StartDate, Projects.FinishDate, 

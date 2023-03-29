@@ -32,8 +32,8 @@ const createWindow = () => {
 app.on('ready', () => {
   ipcMain.handle('getMembers', ()=>dbmanager.getMembers());
   ipcMain.handle('getProjectNames', ()=>dbmanager.getProjectNames());
-
   ipcMain.handle('getProjectEdit', async (event,arg)=>dbmanager.getProjectEdit(arg));
+  ipcMain.handle('openDbDialog', async (event)=>dbmanager.openDbDialog());
   createWindow();
 })
 
