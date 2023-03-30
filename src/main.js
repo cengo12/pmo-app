@@ -34,6 +34,7 @@ app.on('ready', () => {
   ipcMain.handle('getProjectNames', ()=>dbmanager.getProjectNames());
   ipcMain.handle('getProjectEdit', async (event,arg)=>dbmanager.getProjectEdit(arg));
   ipcMain.handle('openDbDialog', async (event)=>dbmanager.openDbDialog());
+    ipcMain.handle('getDates', async (event)=>dbmanager.getDates());
   createWindow();
 })
 

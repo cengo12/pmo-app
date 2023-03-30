@@ -331,4 +331,19 @@ exports.getProjectEdit = async (arg) => {
     };
 }
 
+exports.getDates = async (arg) => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
+    const query = `
+    SELECT ProjectName, StartDate, FinishDate FROM Projects
+    `;
+    const result = db.prepare(query).all()
+    const formattedData = result.map(({ ProjectName, StartDate, FinishDate }) => ({
+        x: [new Date(StartDate).toISOString().substring(0, 10), new Date(FinishDate).toISOString().substring(0,10)],
+        y: ProjectName
+    }));
+    console.log(formattedData);
+    return formattedData;
+}
 

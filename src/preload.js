@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld("dbapi", {
     getProjectNames: () => ipcRenderer.invoke('getProjectNames'),
     getProjectEdit: (id) => ipcRenderer.invoke('getProjectEdit',id),
     openDbDialog: () => ipcRenderer.invoke('openDbDialog'),
+    getDates: () => ipcRenderer.invoke('getDates'),
 });
