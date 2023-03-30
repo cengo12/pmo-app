@@ -1,15 +1,18 @@
 import React from "react";
 import {Button} from "primereact/button";
 
+
 export default function Settings(){
-    const getFile = () => {
-        window.dbapi.getDatabaseFile().then(result=>console.log(result))
+
+    const openDialog = () => {
+        window.dbapi.openDbDialog().then((result) => {
+            console.log(result);
+        });
     }
 
     return(
         <div>
-            <Button onClick={()=>getFile() }>dosya</Button>
+            <Button onClick={()=>openDialog()}>Veritabani </Button>
         </div>
     )
-
 }

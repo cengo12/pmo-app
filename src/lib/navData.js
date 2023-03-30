@@ -22,7 +22,7 @@ export const navData = [
     },
     {
         id: 3,
-        icon: <i className="pi pi-file-edit" />,
+        icon: <i className="pi pi-cog" />,
         text: "Ayarlar",
         link: "settings"
     }

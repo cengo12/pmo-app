@@ -1,54 +1,43 @@
 const betterSqlite3 = require('better-sqlite3');
-const { dialog } = require('electron')
-const fs = require("fs");
-const path = require("path");
+const { dialog } = require('electron');
+const {join} = require("path");
+const {existsSync, readFileSync, writeFileSync} = require("fs");
 
-// Function to initialize database connection and return db object
-const getDB = (filePath) => {
-    return betterSqlite3(filePath);
-};
-
-// Function to get the database file path
-exports.getDatabaseFile = () => {
-    return new Promise((resolve, reject) => {
-        dialog.showOpenDialog({ properties: ['openFile'] }).then(result => {
-            const filePaths = result.filePaths;
-            console.log('Selected file path:', filePaths[0]);
-
-            // Read the existing config file, if it exists
-            const configPath = path.join(__dirname, 'config.json');
-            let config = {};
-            if (fs.existsSync(configPath)) {
-                const data = fs.readFileSync(configPath);
-                config = JSON.parse(data);
-            }
-
-            // Update the file path in the config object
-            config.filePath = filePaths[0];
-
-            // Write the updated config object to the config file
-            fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-
-            // Resolve the promise with the selected file path
-            resolve(filePaths[0]);
-        }).catch(err => {
-            console.error(err);
-            reject(err);
-        });
-    });
-};
-
-const getDb = async () => {
-    // Get database file path
-    const filePath = await exports.getDatabaseFile();
-    // Get db object using file path
-    const db = getDB(filePath);
-    return db
+let db = null;
+const getDb = async ()  =>  {
+    try {
+        const configFileExists = existsSync('config.json');
+        if (configFileExists) {
+            const config = JSON.parse(readFileSync('config.json').toString());
+            return config.databaseFilePath;
+        } else {
+            return await exports.openDbDialog();
+        }
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
 }
 
+exports.openDbDialog = async () => {
+    try {
+        const result = await dialog.showOpenDialog({ properties: ['openFile'] });
+        const filePath = result.filePaths[0];
+        writeFileSync('config.json', JSON.stringify({ databaseFilePath: filePath }));
+        return filePath;
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+};
 
-exports.newProject = (newProject) => {
-    const db = getDb();
+
+
+exports.newProject = async (newProject) => {
+
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     // Insert to projects table
     db.prepare(`INSERT INTO Projects (ProjectName, ProjectManager, StartDate, FinishDate) VALUES (?,?,?,?);`)
@@ -93,9 +82,12 @@ exports.newProject = (newProject) => {
     db.close();
 }
 
-exports.updateProject = (newProject) => {
+exports.updateProject = async (newProject) => {
     const existingProjectId = newProject.projectId;
-    const db = getDb()
+
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     // Update Projects table
     db.prepare(`
@@ -152,8 +144,10 @@ exports.updateProject = (newProject) => {
     db.close();
 };
 
-exports.deleteProject = (existingProjectId) => {
-    const db = getDb()
+exports.deleteProject = async (existingProjectId) => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     // Delete ProjectEmployeeBridge records for the existing project
     db.prepare(`
     DELETE FROM ProjectEmployeeBridge 
@@ -178,8 +172,10 @@ exports.deleteProject = (existingProjectId) => {
 };
 
 
-exports.getMembers = () => {
-    const db = getDb()
+exports.getMembers = async () => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     const data = db.prepare(
         'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
         'Employees.RegistrationNumber, Employees.FullName, ' +
@@ -190,6 +186,55 @@ exports.getMembers = () => {
         'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId ' +
         'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;'
     ).all();
+    /*
+    // Get a list of unique age values
+    const idValues = [...new Set(data.map(item => item.EmployeeId))];
+
+    // Create a new array for each age value
+    const memberArrays = idValues.map(id => data.filter(item => item.EmployeeId === id));
+
+
+    let tableData = [];
+    for (let i = 0; i < memberArrays.length; i++) {
+        let data = memberArrays[i];
+        data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+        let StartProject = {}
+        let FinishProject = {}
+        StartProject = {...data[0]};
+        FinishProject = {...data[0]};
+
+
+        for (let i = 0; i < data.length-1; i++) {
+            if (new Date(StartProject.FinishDate) > new Date(data[i+1].StartDate)){
+                if (new Date(StartProject.FinishDate) > new Date(data[i+1].FinishDate)){
+                    FinishProject = {...data[i]};
+                }else{
+                    FinishProject = {...data[i+1]};
+                }
+            }
+            else{
+                if (new Date(FinishProject.FinishDate) < new Date(data[i+1].FinishDate) ){
+                    if (new Date(FinishProject.FinishDate) >  new Date(data[i+1].StartDate)){
+                        FinishProject = {...data[i+1]}
+                    }
+                }
+                StartProject.PaperType = 'Başlangıç Formu';
+                FinishProject.PaperType = 'Bitiş Formu';
+                tableData.push(StartProject);
+                tableData.push(FinishProject);
+                StartProject = {...data[i+1]};
+                FinishProject = {...data[i+1]};
+            }
+        }
+        StartProject.PaperType = 'Başlangıç Formu';
+        FinishProject.PaperType = 'Bitiş Formu';
+        tableData.push(StartProject);
+        tableData.push(FinishProject);
+    }
+
+
+    return tableData;*/
+
 
     // Get a list of unique EmployeeId values
     const uniqueIds = [...new Set(data.map(item => item.EmployeeId))];
@@ -236,20 +281,26 @@ exports.getMembers = () => {
 }
 
 
-exports.updateStatus = (updatedStatus) => {
-    const db = getDb()
+exports.updateStatus = async (updatedStatus) => {
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.BridgeId);
     db.close();
 }
 
-exports.getProjectNames= (projectId) =>{
-    const db = getDb()
+exports.getProjectNames= async (projectId) =>{
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
     return db.prepare('SELECT ProjectName, ProjectId FROM Projects').all();
 }
 
-exports.getProjectEdit = (arg) => {
+exports.getProjectEdit = async (arg) => {
     const projectId = arg.id;
-    const db = betterSqlite3('./src/database/sampledata.db');
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
 
     const query = `
     SELECT Projects.ProjectName, Projects.ProjectManager, Projects.StartDate, Projects.FinishDate, 
