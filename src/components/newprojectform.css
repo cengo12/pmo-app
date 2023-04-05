@@ -8,4 +8,13 @@
     justify-content: end;
 }
 
+.bottom-buttons{
+    display: flex;
+    justify-content: end;
+    align-items: flex-end;
+    gap: 8px;
+}
 
+.bottom-buttons button{
+    flex-direction: column;
+}

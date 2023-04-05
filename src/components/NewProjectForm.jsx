@@ -22,6 +22,7 @@ class NewProjectForm extends React.Component {
             projects: [{}],
             editMode: false,
             projectId: "",
+            screenHeight: window.innerHeight-335,
         };
 
         addLocale("tr",{
@@ -83,10 +84,22 @@ class NewProjectForm extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.addMemberFields = this.addMemberFields.bind(this);
         this.removeMemberFields = this.removeMemberFields.bind(this);
+        this.handleResize = this.handleResize.bind(this);
     }
 
     componentDidMount() {
         window.dbapi.getProjectNames().then(result =>this.setState({projects:result}));
+        window.addEventListener('resize', this.handleResize);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.handleResize);
+    }
+
+    handleResize() {
+        this.setState({
+            screenHeight: window.innerHeight-335,
+        });
     }
 
     handleChange(event) {
@@ -228,7 +241,7 @@ class NewProjectForm extends React.Component {
                             />
                         </div>
                     </div>
-                    <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height:"450px" }}>
+                    <ScrollPanel className="field col-12 team-members" style={{ width: '99%', height : this.state.screenHeight }}>
                         <div >
                             {this.state.memberFields.map((input, index) => {
                                 return(
@@ -287,7 +300,8 @@ class NewProjectForm extends React.Component {
                             </div>
                         </div>
                     </ScrollPanel>
-                    <div className="field col-4 col-offset-8 plus-button">
+                    <div className="bottom-buttons field col-12">
+                        {/* className="field col-4 col-offset-8 plus-button bottom-buttons" */}
                         <Button
                             type="button"
                             label={this.state.editMode ? "Yeni Kayıt Moduna Geç" : "Düzenleme Moduna Geç"}
