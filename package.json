@@ -2,7 +2,7 @@
   "name": "pmo-app",
   "productName": "pmo-app",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "PMO proje ve çalışan takip sistemi",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -39,6 +39,8 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.29.3",
     "electron-squirrel-startup": "^1.0.0",
+    "moment": "^2.29.4",
+    "moment-locales-webpack-plugin": "^1.2.0",
     "path-browserify": "^1.0.1",
     "primeflex": "^3.3.0",
     "primeicons": "^6.0.1",

@@ -3,7 +3,11 @@ const { dialog } = require('electron');
 const {join} = require("path");
 const {existsSync, readFileSync, writeFileSync} = require("fs");
 
+
 let db = null;
+
+
+// Get database from path inside config, if path does not exist open file dialog
 const getDb = async ()  =>  {
     try {
         const configFileExists = existsSync('config.json');
@@ -19,6 +23,8 @@ const getDb = async ()  =>  {
     }
 }
 
+
+// Open file dialog for choosing database file
 exports.openDbDialog = async () => {
     try {
         const result = await dialog.showOpenDialog({ properties: ['openFile'] });
@@ -32,34 +38,34 @@ exports.openDbDialog = async () => {
 };
 
 
-
+// Called when new project added
 exports.newProject = async (newProject) => {
-
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
 
-    // Insert to projects table
-    db.prepare(`INSERT INTO Projects (ProjectName, ProjectManager, StartDate, FinishDate) VALUES (?,?,?,?);`)
+    // Insert project to projects table
+    const query = `INSERT INTO Projects (ProjectName, ProjectManager, StartDate, FinishDate) VALUES (?,?,?,?);`
+    db.prepare(query)
         .run(
             newProject.projectName,
             newProject.projectManager,
             newProject.projectStartDate.toISOString(),
             newProject.projectEndDate.toISOString()
         );
-    //console.log(newProject.projectEndDate.toISOString());
-    let projectPk = db.prepare('SELECT ProjectId FROM Projects WHERE ProjectId = last_insert_rowid();').all(); //projectPk for bridge table
 
-    // Insert to employees table
+    // Insert all project employees to employees table
+    let projectPk = db.prepare('SELECT ProjectId FROM Projects WHERE ProjectId = last_insert_rowid();').all(); //projectPk for bridge table
     for (const member of newProject.projectMembers) {
         db.prepare('INSERT OR IGNORE INTO Employees (RegistrationNumber, FullName) VALUES (?,?);')
             .run(
                 member.memberId,
                 member.memberName,
             )
-        let memberPk = db.prepare('SELECT EmployeeId FROM Employees WHERE RegistrationNumber = (?);').all(member.memberId);
 
-        // Insert to ProjectEmployeeBridge
+        // Insert all project employees to ProjectEmployeeBridge as Start Form
+        let memberPk = db.prepare('SELECT EmployeeId FROM Employees WHERE RegistrationNumber = (?);').all(member.memberId);
         db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);')
             .run(
                 projectPk[0].ProjectId,
@@ -69,6 +75,7 @@ exports.newProject = async (newProject) => {
                 'Eksik',
             );
 
+        // Insert all project employees to ProjectEmployeeBridge as Finish Form
         db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);')
             .run(
                 projectPk[0].ProjectId,
@@ -78,23 +85,23 @@ exports.newProject = async (newProject) => {
                 'Eksik',
             );
     }
-
     db.close();
 }
 
-exports.updateProject = async (newProject) => {
-    const existingProjectId = newProject.projectId;
 
+// Called when a project gets edited
+exports.updateProject = async (newProject) => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
 
     // Update Projects table
-    db.prepare(`
-    UPDATE Projects 
-    SET ProjectName = ?, ProjectManager = ?, StartDate = ?, FinishDate = ? 
-    WHERE ProjectId = ?;
-  `).run(
+    const existingProjectId = newProject.projectId;
+    db.prepare(
+        `UPDATE Projects SET ProjectName = ?, ProjectManager = ?, StartDate = ?, FinishDate = ? 
+        WHERE ProjectId = ?;`)
+        .run(
         newProject.projectName,
         newProject.projectManager,
         newProject.projectStartDate.toISOString(),
@@ -103,141 +110,94 @@ exports.updateProject = async (newProject) => {
     );
 
     // Delete old ProjectEmployeeBridge records for the existing project
-    db.prepare(`
-    DELETE FROM ProjectEmployeeBridge 
-    WHERE ProjectFk = ?;
-  `).run(existingProjectId);
+    db.prepare(`DELETE FROM ProjectEmployeeBridge WHERE ProjectFk = ?;`).run(existingProjectId);
 
     // Insert new ProjectEmployeeBridge records for the existing project
     for (const member of newProject.projectMembers) {
         // Insert or update Employees table
         db.prepare(
-            `INSERT INTO Employees (RegistrationNumber, FullName) VALUES (?, ?) ON CONFLICT (RegistrationNumber) DO UPDATE SET FullName = excluded.FullName;`)
+            `INSERT INTO Employees (RegistrationNumber, FullName) VALUES (?, ?) 
+            ON CONFLICT (RegistrationNumber) 
+            DO UPDATE SET FullName = excluded.FullName; `)
             .run(
             member.memberId,
             member.memberName
         );
 
         // Get the EmployeeId for the member from the Employees table
-        const employeeId = db.prepare(`
-      SELECT EmployeeId FROM Employees WHERE RegistrationNumber = ?;
-    `).get(member.memberId).EmployeeId;
+        const employeeId = db.prepare(
+            `SELECT EmployeeId FROM Employees WHERE RegistrationNumber = ?;`)
+            .get(member.memberId).EmployeeId;
 
         // Insert new ProjectEmployeeBridge record
-        db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);').run(
+        db.prepare(`INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);`)
+            .run(
             existingProjectId,
             employeeId,
             member.memberTitle,
             'Başlangıç Formu',
             'Eksik',
         );
-        db.prepare('INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);').run(
+        db.prepare(`INSERT INTO ProjectEmployeeBridge (ProjectFk, EmployeeFk, ProjectRole, PaperType, Status) VALUES (?,?,?,?,?);`)
+            .run(
             existingProjectId,
             employeeId,
             member.memberTitle,
             'Bitiş Formu',
             'Eksik',
         );
-
     }
-
     db.close();
 };
 
+
+// Called when a project gets deleted
 exports.deleteProject = async (existingProjectId) => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
+
     // Delete ProjectEmployeeBridge records for the existing project
-    db.prepare(`
-    DELETE FROM ProjectEmployeeBridge 
-    WHERE ProjectFk = ?;
-  `).run(existingProjectId);
+    db.prepare(`DELETE FROM ProjectEmployeeBridge WHERE ProjectFk = ?;`).run(existingProjectId);
 
     // Delete Employees records that are no longer referenced by any ProjectEmployeeBridge records
-    db.prepare(`
-    DELETE FROM Employees 
-    WHERE NOT EXISTS (
-      SELECT * FROM ProjectEmployeeBridge WHERE EmployeeFk = Employees.EmployeeId
-    );
-  `).run();
+    db.prepare(
+        `DELETE FROM Employees WHERE NOT EXISTS 
+        (SELECT * FROM ProjectEmployeeBridge WHERE EmployeeFk = Employees.EmployeeId);`)
+        .run();
 
     // Delete Projects record
-    db.prepare(`
-    DELETE FROM Projects 
-    WHERE ProjectId = ?;
-  `).run(existingProjectId);
+    db.prepare(
+        `DELETE FROM Projects 
+        WHERE ProjectId = ?;`)
+        .run(existingProjectId);
 
     db.close();
 };
 
 
+// Get all necessary data for membersTable component
 exports.getMembers = async () => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
+
     const data = db.prepare(
-        'SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, ' +
-        'Employees.RegistrationNumber, Employees.FullName, ' +
-        'Projects.ProjectManager, Projects.ProjectName, ProjectEmployeeBridge.ProjectRole, ' +
-        'ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status, ' +
-        'Projects.StartDate, Projects.FinishDate ' +
-        'FROM ProjectEmployeeBridge ' +
-        'JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId ' +
-        'JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;'
-    ).all();
-    /*
-    // Get a list of unique age values
-    const idValues = [...new Set(data.map(item => item.EmployeeId))];
-
-    // Create a new array for each age value
-    const memberArrays = idValues.map(id => data.filter(item => item.EmployeeId === id));
-
-
-    let tableData = [];
-    for (let i = 0; i < memberArrays.length; i++) {
-        let data = memberArrays[i];
-        data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
-        let StartProject = {}
-        let FinishProject = {}
-        StartProject = {...data[0]};
-        FinishProject = {...data[0]};
-
-
-        for (let i = 0; i < data.length-1; i++) {
-            if (new Date(StartProject.FinishDate) > new Date(data[i+1].StartDate)){
-                if (new Date(StartProject.FinishDate) > new Date(data[i+1].FinishDate)){
-                    FinishProject = {...data[i]};
-                }else{
-                    FinishProject = {...data[i+1]};
-                }
-            }
-            else{
-                if (new Date(FinishProject.FinishDate) < new Date(data[i+1].FinishDate) ){
-                    if (new Date(FinishProject.FinishDate) >  new Date(data[i+1].StartDate)){
-                        FinishProject = {...data[i+1]}
-                    }
-                }
-                StartProject.PaperType = 'Başlangıç Formu';
-                FinishProject.PaperType = 'Bitiş Formu';
-                tableData.push(StartProject);
-                tableData.push(FinishProject);
-                StartProject = {...data[i+1]};
-                FinishProject = {...data[i+1]};
-            }
-        }
-        StartProject.PaperType = 'Başlangıç Formu';
-        FinishProject.PaperType = 'Bitiş Formu';
-        tableData.push(StartProject);
-        tableData.push(FinishProject);
-    }
-
-
-    return tableData;*/
-
+        `SELECT ProjectEmployeeBridge.BridgeId, Employees.EmployeeId, 
+        Employees.RegistrationNumber, Employees.FullName, 
+        Projects.ProjectManager, Projects.ProjectName, ProjectEmployeeBridge.ProjectRole, 
+        ProjectEmployeeBridge.PaperType, ProjectEmployeeBridge.Status, 
+        Projects.StartDate, Projects.FinishDate 
+        FROM ProjectEmployeeBridge 
+        JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId 
+        JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;`)
+        .all();
 
     // Get a list of unique EmployeeId values
     const uniqueIds = [...new Set(data.map(item => item.EmployeeId))];
+
     // Initialize an empty array to hold the resulting table data
     const tableData = [];
 
@@ -258,66 +218,82 @@ exports.getMembers = async () => {
             if (new Date(startProject.FinishDate) > new Date(item.StartDate)) {
                 finishProject = item;
             }
-            // If the finish date of the finish project is earlier than the finish date of the current project and the finish date of the finish project is later than the start date of the current project, update the finish project
+            // If conditions met, update the finish project
             else if (new Date(finishProject.FinishDate) < new Date(item.FinishDate) && new Date(finishProject.FinishDate) > new Date(item.StartDate)) {
                 finishProject = item;
             }
-            // Otherwise, add the start and finish projects to the table data array, update the start and finish projects to the current project, and continue to the next project
+            // Otherwise, add the start and finish projects to the table data array,
+            // update the start and finish projects to the current project,
+            // and continue to the next project
             else {
                 tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
                 startProject = item;
                 finishProject = item;
             }
         });
-
         // Add the start and finish projects for the last project in the array to the table data array
         tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
     });
-
     // Return the resulting table data
     return tableData;
-
-
 }
 
 
+// Called when user changes status in membersTable component
 exports.updateStatus = async (updatedStatus) => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
-    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?').run(updatedStatus.Status,updatedStatus.BridgeId);
+
+    // Update status in BridgeTable
+    db.prepare('UPDATE ProjectEmployeeBridge SET Status = ? WHERE BridgeId = ?')
+        .run(
+            updatedStatus.Status,
+            updatedStatus.BridgeId
+        );
     db.close();
 }
 
-exports.getProjectNames= async (projectId) =>{
+
+// Get all project names
+exports.getProjectNames= async (projectId) => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
-    return db.prepare('SELECT ProjectName, ProjectId FROM Projects').all();
+
+    const projectNames = db.prepare('SELECT ProjectName, ProjectId FROM Projects').all();
+
+    db.close();
+
+    return projectNames
 }
 
+
+// Get all required data for edit project option
 exports.getProjectEdit = async (arg) => {
-    const projectId = arg.id;
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
 
-    const query = `
-    SELECT Projects.ProjectName, Projects.ProjectManager, Projects.StartDate, Projects.FinishDate, 
-       GROUP_CONCAT(Employees.FullName, ',') AS memberName, 
-       GROUP_CONCAT(Employees.RegistrationNumber, ',') AS memberId, 
-       GROUP_CONCAT(ProjectEmployeeBridge.ProjectRole, ',') AS memberTitle
-    FROM Projects
-    INNER JOIN (
-        SELECT DISTINCT ProjectFk, EmployeeFk, ProjectRole
-        FROM ProjectEmployeeBridge
-    ) AS ProjectEmployeeBridge ON Projects.ProjectId = ProjectEmployeeBridge.ProjectFk
-    INNER JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId
-    WHERE Projects.ProjectId = ?
-    GROUP BY Projects.ProjectId;
-    `;
+    const projectId = arg.id;
 
-    const result = db.prepare(query).get(projectId);
+
+    const result = db.prepare(
+        `SELECT Projects.ProjectName, Projects.ProjectManager, Projects.StartDate, Projects.FinishDate, 
+        GROUP_CONCAT(Employees.FullName, ',') AS memberName, 
+        GROUP_CONCAT(Employees.RegistrationNumber, ',') AS memberId, 
+        GROUP_CONCAT(ProjectEmployeeBridge.ProjectRole, ',') AS memberTitle
+        FROM Projects INNER JOIN ( SELECT DISTINCT ProjectFk, EmployeeFk, ProjectRole FROM ProjectEmployeeBridge ) 
+        AS ProjectEmployeeBridge ON Projects.ProjectId = ProjectEmployeeBridge.ProjectFk
+        INNER JOIN Employees ON ProjectEmployeeBridge.EmployeeFk = Employees.EmployeeId
+        WHERE Projects.ProjectId = ?
+        GROUP BY Projects.ProjectId;`)
+        .get(projectId);
+
+    // Return data in the required format
     return {
         projectName: result.ProjectName,
         projectManager: result.ProjectManager,
@@ -331,19 +307,22 @@ exports.getProjectEdit = async (arg) => {
     };
 }
 
+
+// Get required data for GanttChart component
 exports.getDates = async (arg) => {
+    // Database connection
     await getDb().then((dbPath) => {
         db = betterSqlite3(dbPath);
     });
-    const query = `
-    SELECT ProjectName, StartDate, FinishDate FROM Projects
-    `;
-    const result = db.prepare(query).all()
-    const formattedData = result.map(({ ProjectName, StartDate, FinishDate }) => ({
-        x: [new Date(StartDate).toISOString().substring(0, 10), new Date(FinishDate).toISOString().substring(0,10)],
-        y: ProjectName
+
+    const result = db.prepare(`SELECT ProjectName, StartDate, FinishDate, ProjectManager FROM Projects`).all()
+
+    // Format data to required format
+    return result.map(
+        ({ProjectName, StartDate, FinishDate, ProjectManager}) => ({
+        x: [new Date(StartDate).toISOString().substring(0, 10), new Date(FinishDate).toISOString().substring(0, 10)],
+        y: ProjectName,
+        name: ProjectManager,
     }));
-    console.log(formattedData);
-    return formattedData;
 }
 

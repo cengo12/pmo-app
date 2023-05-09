@@ -1,4 +1,5 @@
 const rules = require('./webpack.rules');
+const MomentLocalesPlugin = require("moment-locales-webpack-plugin");
 
 rules.push({
   test: /\.css$/,
@@ -7,6 +8,11 @@ rules.push({
 
 module.exports = {
   // Put your normal webpack config below here
+  plugins: [
+    new MomentLocalesPlugin({
+      localesToKeep: ['tr'],
+    }),
+  ],
   module: {
     rules,
   },

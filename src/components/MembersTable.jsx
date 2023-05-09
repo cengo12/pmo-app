@@ -7,6 +7,9 @@ import {Button} from "primereact/button";
 
 import styles from "./memberstable.module.css"
 
+import moment from 'moment';
+import 'moment/locale/tr';
+
 
 export default function MembersTable(){
     const [members, setMembers] = useState([{
@@ -32,12 +35,19 @@ export default function MembersTable(){
 
 
     const rowExpansionTemplate = (data) => {
-        data.StartDate = new Date(data.StartDate).toLocaleDateString()
-        data.FinishDate = new Date(data.FinishDate).toLocaleDateString()
+        const data_ = { ...data }; // Create a copy of data
+
+        const startDate = new Date(data.StartDate);
+        const formattedStartDate = moment(startDate).format("DD/MM/YYYY");
+        data_.StartDate = formattedStartDate;
+
+        const finishDate = new Date(data.FinishDate);
+        const formattedFinishDate = moment(finishDate).format("DD/MM/YYYY");
+        data_.FinishDate = formattedFinishDate;
         return (
             <div>
-                <h4>{data.ProjectName} Detayları</h4>
-                <DataTable value={[data]}>
+                <h4>{data_.ProjectName} Detayları</h4>
+                <DataTable value={[data_]}>
                     <Column field="ProjectManager" header="Proje Yöneticisi"></Column>
                     <Column field="StartDate" header="Proje Başlangıç Tarihi"></Column>
                     <Column field="FinishDate" header="Proje Bitiş Tarihi"></Column>
@@ -95,7 +105,7 @@ export default function MembersTable(){
         if (foundMember && foundMember.Checked) {
             foundMember.Status = "Onaylandı";
         }
-        console.log(_members);
+
         setMembers(_members);
 
         const updatedStatus = {
@@ -108,7 +118,7 @@ export default function MembersTable(){
 
     const confirmationBodyTemplate = (member) =>{
         return(
-            <div className={styles.animatedRow}>
+            <div className={styles.confirmation}>
                 <Checkbox checked={member.Checked} onChange={() => handleCheckboxClick(member)}></Checkbox>
                 <Button size="sm" onClick={()=> handleConfButtonClick(member)} >Onayla</Button>
             </div>
@@ -119,6 +129,8 @@ export default function MembersTable(){
         <div>
             <div className="data">
                 <DataTable expandedRows={expandedRows}
+                           onRowReorder={event => {
+                               console.log(event.value)}}
                            onRowToggle={(e) => setExpandedRows(e.data)}
                            rowExpansionTemplate={rowExpansionTemplate}
                            value={members} stripedRows scrollable="true" sortField="Status" sortOrder={1} removableSort rowHover={true}>

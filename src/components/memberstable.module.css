@@ -1,4 +1,7 @@
-.animated-row {
-    transition: transform 2s ease-in-out;
-    transform: translateX(0) translateY(100%);
+.confirmation {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
