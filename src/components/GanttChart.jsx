@@ -62,6 +62,7 @@ export default function GanttChart(){
                 }]
             },
             options: {
+                events: [],
                 layout: {
                  padding: {
                      left: 100,

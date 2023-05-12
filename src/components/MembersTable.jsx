@@ -35,19 +35,19 @@ export default function MembersTable(){
 
 
     const rowExpansionTemplate = (data) => {
-        const data_ = { ...data }; // Create a copy of data
+        const _data = { ...data }; // Create a copy of data
 
         const startDate = new Date(data.StartDate);
         const formattedStartDate = moment(startDate).format("DD/MM/YYYY");
-        data_.StartDate = formattedStartDate;
+        _data.StartDate = formattedStartDate;
 
         const finishDate = new Date(data.FinishDate);
         const formattedFinishDate = moment(finishDate).format("DD/MM/YYYY");
-        data_.FinishDate = formattedFinishDate;
+        _data.FinishDate = formattedFinishDate;
         return (
             <div>
-                <h4>{data_.ProjectName} Detayları</h4>
-                <DataTable value={[data_]}>
+                <h4>{_data.ProjectName} Detayları</h4>
+                <DataTable value={[_data]}>
                     <Column field="ProjectManager" header="Proje Yöneticisi"></Column>
                     <Column field="StartDate" header="Proje Başlangıç Tarihi"></Column>
                     <Column field="FinishDate" header="Proje Bitiş Tarihi"></Column>

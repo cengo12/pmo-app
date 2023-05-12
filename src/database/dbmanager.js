@@ -195,48 +195,89 @@ exports.getMembers = async () => {
         JOIN Projects ON ProjectEmployeeBridge.ProjectFk = Projects.ProjectId;`)
         .all();
 
-    // Get a list of unique EmployeeId values
-    const uniqueIds = [...new Set(data.map(item => item.EmployeeId))];
+    const idValues = [...new Set(data.map(item => item.EmployeeId))];
 
-    // Initialize an empty array to hold the resulting table data
-    const tableData = [];
+    const memberArrays = idValues.map(id => data.filter(item => item.EmployeeId === id));
 
-    // Loop through each unique EmployeeId
-    uniqueIds.forEach(id => {
-        // Filter the data array to get all projects for the current EmployeeId
-        const memberData = data.filter(item => item.EmployeeId === id);
-        // Sort the projects by their start date
-        memberData.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+    let tableData = [];
+    for (let i = 0; i < memberArrays.length; i++) {
+        let data = memberArrays[i];
+        data.sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate));
+        data = data.filter((element, index) => index % 2 === 0);
 
-        // Initialize the start and finish projects to the first project in the array
-        let startProject = memberData[0];
-        let finishProject = memberData[0];
+        let groupData = [];
+        let startProject = data[0];
+        let finishProject = data[0];
+        for (let i = 1; i < data.length; i++) {
 
-        // Loop through the remaining projects for the current EmployeeId
-        memberData.slice(1).forEach(item => {
-            // If the finish date of the start project is later than the start date of the current project, update the finish project
-            if (new Date(startProject.FinishDate) > new Date(item.StartDate)) {
-                finishProject = item;
+
+            let start = new Date(startProject.StartDate);
+            let finish = new Date(finishProject.FinishDate);
+
+            let nextProject = data[i];
+
+            let nextStart = new Date(nextProject.StartDate);
+            let nextFinish = new Date(nextProject.FinishDate);
+
+
+            // sonraki projeyi içine alıyorsa
+            if (nextFinish > start && nextFinish < finish) {
+                startProject = data[0];
+                finishProject = startProject;
+
+            } //sonraki proje öncekini içine alıyorsa
+            else if (nextFinish < start && nextFinish > finish) {
+                startProject = data[0];
+                finishProject = nextProject;
             }
-            // If conditions met, update the finish project
-            else if (new Date(finishProject.FinishDate) < new Date(item.FinishDate) && new Date(finishProject.FinishDate) > new Date(item.StartDate)) {
-                finishProject = item;
+            // sonuna ekleniyorsa
+            else if (nextStart < finish && nextFinish > finish) {
+                startProject = data[0];
+                finishProject = nextProject;
             }
-            // Otherwise, add the start and finish projects to the table data array,
-            // update the start and finish projects to the current project,
-            // and continue to the next project
+            // farklı grup ise
             else {
-                tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
-                startProject = item;
-                finishProject = item;
+                groupData.push([startProject, finishProject])
+                data.splice(0, i)
+                startProject = data[0];
+                finishProject = data[0];
             }
-        });
-        // Add the start and finish projects for the last project in the array to the table data array
-        tableData.push({...startProject, PaperType: 'Başlangıç Formu'}, {...finishProject, PaperType: 'Bitiş Formu'});
-    });
-    // Return the resulting table data
+        }
+        groupData.push([startProject, finishProject]);
+        groupData.forEach((group) => {
+            let start = {...group[0]}
+            let finish = {...group[1]}
+            start.PaperType = 'Başlangıç Formu';
+            finish.PaperType = 'Bitiş Formu';
+            tableData.push(start)
+            tableData.push(finish)
+        })
+    }
+
     return tableData;
 }
+
+//TODO: add listener to db , projectemplooyeebridge table status column
+exports.setupDatabaseListener= async (databasePath, interval, callback) => {
+    // Database connection
+    await getDb().then((dbPath) => {
+        db = betterSqlite3(dbPath);
+    });
+    // Retrieve the data to be monitored
+    const getData = db.prepare('SELECT Status FROM ProjectEmployeeBridge').all.bind(db);
+
+    let previousData = getData();
+
+    setInterval(() => {
+        const currentData = getData();
+        if (JSON.stringify(currentData) !== JSON.stringify(previousData)) {
+            previousData = currentData;
+            //TODO add callback
+            callback(currentData);
+        }
+    }, 100);
+}
+
 
 
 // Called when user changes status in membersTable component
