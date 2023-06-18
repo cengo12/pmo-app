@@ -127,7 +127,7 @@ export default function MembersTable(){
 
     return(
         <div>
-            <div className="data">
+            <div className="data" >
                 <DataTable expandedRows={expandedRows}
                            onRowReorder={event => {
                                console.log(event.value)}}

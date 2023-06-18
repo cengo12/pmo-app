@@ -3,6 +3,8 @@ import { useRef, useEffect } from 'react';
 import Chart from 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 import {tr} from "date-fns/locale";
+import "./ganttchart.css"
+
 
 export default function GanttChart(){
     const chartRef = useRef(null);
@@ -36,11 +38,13 @@ export default function GanttChart(){
     const handleResize = () => {
         if (chartRef.current && myChart) {
             const ctx = chartRef.current.getContext('2d');
-            const containerWidth = ctx.canvas.parentNode.offsetWidth;
+            let containerWidth = ctx.canvas.parentNode.offsetWidth;
+            let containerHeight = ctx.canvas.parentNode.offsetHeight;
             chartRef.current.style.width = `${containerWidth}px`;
+            chartRef.current.style.height = `${containerHeight}px`;
             myChart.options.scales.x.ticks.source = 'auto';
             myChart.resize();
-            console.log(containerWidth)
+            console.log(containerHeight)
         }
     };
 
@@ -65,7 +69,7 @@ export default function GanttChart(){
                 events: [],
                 layout: {
                  padding: {
-                     left: 100,
+                     left: 90,
                  }
                 },
                 plugins: {
@@ -125,15 +129,40 @@ export default function GanttChart(){
             ctx.fillStyle = 'black';
             ctx.textBaseline = 'middle';
             data.datasets[0].data.forEach((datapoint, index) => {
-                ctx.fillText(datapoint.name, 10, y.getPixelForValue(index))
+
+                let fullName = datapoint.name;
+                let words = fullName.split(' ');
+
+                if (words.length > 1) {
+                    if (words.length%2 === 1){
+                        let offset = 40;
+                        let yPixel = y.getPixelForValue(index) - (offset/words.length)
+                        for (let i = 0; i < words.length; i++) {
+                            ctx.fillText(words[i], 4, yPixel)
+                            yPixel += (offset/words.length)
+                        }
+                    }else{
+                        let offset = 10;
+                        let yPixel = y.getPixelForValue(index) - ((offset)*(words.length/2))
+                        for (let i = 0; i < words.length; i++) {
+                            ctx.fillText(words[i], 4, yPixel)
+                            yPixel += ((offset)*(words.length/2))
+                        }
+                    }
+
+                } else {
+                    ctx.fillText(datapoint.name, 4, y.getPixelForValue(index))
+                }
+
+
             })
         },
     }
 
 
     return(
-        <div>
-            <canvas  id="myChart" ref={chartRef} style={{height:'99%'}}></canvas>
+        <div >
+            <canvas  id="myChart" ref={chartRef} ></canvas>
         </div>
     )
 }

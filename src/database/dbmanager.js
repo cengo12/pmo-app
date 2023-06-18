@@ -210,7 +210,6 @@ exports.getMembers = async () => {
         let finishProject = data[0];
         for (let i = 1; i < data.length; i++) {
 
-
             let start = new Date(startProject.StartDate);
             let finish = new Date(finishProject.FinishDate);
 
@@ -238,7 +237,13 @@ exports.getMembers = async () => {
             // farklı grup ise
             else {
                 groupData.push([startProject, finishProject])
-                data.splice(0, i)
+                if(i===1){
+                    data.splice(0,1)
+                    i=0
+                }
+                else {
+                    data.splice(0,i)
+                }
                 startProject = data[0];
                 finishProject = data[0];
             }
@@ -336,7 +341,7 @@ exports.getProjectEdit = async (arg) => {
 
     // Return data in the required format
     return {
-        projectName: result.ProjectName,
+        //projectName: result.ProjectName,
         projectManager: result.ProjectManager,
         startDate: new Date(result.StartDate),
         endDate: new Date(result.FinishDate),

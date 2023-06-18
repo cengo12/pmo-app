@@ -108,27 +108,20 @@ class NewProjectForm extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-
+        let newProject = {
+            projectName: this.state.projectName,
+            projectManager: this.state.projectManager,
+            projectStartDate: this.state.startDate,
+            projectEndDate: this.state.endDate,
+            projectMembers: this.state.memberFields,
+            projectId: this.state.projectId,
+        }
         if (this.state.editMode){
-            let newProject = {
-                projectName: this.state.projectName,
-                projectManager: this.state.projectManager,
-                projectStartDate: this.state.startDate,
-                projectEndDate: this.state.endDate,
-                projectMembers: this.state.memberFields,
-                projectId: this.state.projectId,
-            }
             window.dbapi.sendToMain('updateProject',newProject);
         } else {
-            let newProject = {
-                projectName: this.state.projectName,
-                projectManager: this.state.projectManager,
-                projectStartDate: this.state.startDate,
-                projectEndDate: this.state.endDate,
-                projectMembers: this.state.memberFields,
-            }
             window.dbapi.sendToMain('newProject',newProject);
         }
+        window.location.reload(true);
     }
 
     handleMembersChange(index, event){
@@ -176,8 +169,8 @@ class NewProjectForm extends React.Component {
         const projectName = this.state.projectName;
         const projects = this.state.projects;
         return (
-            <div>
-                <form onSubmit={this.handleSubmit} className="formgrid grid form card">
+            <div className="card">
+                <form onSubmit={this.handleSubmit} className="formgrid grid form">
                     <div className="field col-12">
                         {this.state.editMode ? (
                             <div>
