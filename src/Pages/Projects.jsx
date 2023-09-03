@@ -1,9 +1,12 @@
 import React from "react";
+import GanttChart from "../components/GanttChart.jsx";
 
 export default function Projects(){
     return(
         <div>
-            gantt
+            <GanttChart>
+
+            </GanttChart>
         </div>
     )
 }

@@ -19,5 +19,11 @@ export const navData = [
         icon: <i className="pi pi-file-edit" />,
         text: "Proje Ekle/Düzenle",
         link: "addproject"
+    },
+    {
+        id: 3,
+        icon: <i className="pi pi-cog" />,
+        text: "Ayarlar",
+        link: "settings"
     }
 ]
